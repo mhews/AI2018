@@ -51,7 +51,32 @@ def right(maze, loc):
         return 2
     else:
         return 0
-
+def possibleMoves(maze, temp):
+    frontier = []
+    loc = location(temp.x, temp.y, temp.previous)
+    test = down(maze, loc)
+    if test == 1:
+        frontier.append (location(loc.x,loc.y + 1, temp))
+    elif test == 2:
+        return 1
+    test = up(maze, loc)
+    if test == 1:
+        frontier.append(location(loc.x,loc.y - 1, temp))
+    elif test == 2:
+        return 1
+    test = left(maze,loc)
+    if test == 1:
+        frontier.append(location(loc.x - 1, loc.y, temp))
+    elif test == 2:
+        return 1
+    test = right(maze, loc)
+    if test == 1:
+        frontier.append (location(loc.x + 1, loc.y, temp))
+    elif test == 2:
+        return 1
+    if not maze[loc.x][loc.y] == 'P':
+        maze[loc.x][loc.y] = 'X'
+    return frontier
 def output():
     for row in maze:
         for i in row:
@@ -61,34 +86,31 @@ def output():
                 solution.write (i)
 def DFS(maze, frontier):
     expanded = 0
-    loc = None
     while len(frontier) > 0:
-        temp = frontier.pop()
-        loc = location(temp.x, temp.y, temp.previous)
-        test = down(maze, loc)
-        if test == 1:
-            expanded += 1
-            frontier.append (location(loc.x,loc.y + 1, temp))
-        elif test == 2:
+        loc = frontier.pop()
+        pm = possibleMoves(maze,loc)
+        if pm == 1:
             break
-        test = up(maze, loc)
-        if test == 1:
-            expanded += 1
-            frontier.append(location(loc.x,loc.y - 1, temp))
-        elif test == 2:
+        expanded += len(pm)
+        frontier = frontier + pm
+
+
+    while not loc.previous == None:
+        maze[loc.x][loc.y] = '.'
+        loc = loc.previous
+    output()
+    solution.write('\n' + str(expanded))
+
+def BFS(maze, frontier):
+    expanded = 0;
+
+    while len(frontier) > 0:
+        loc = frontier.pop(0)
+        pm = possibleMoves(maze,loc)
+        if pm == 1:
             break
-        test = left(maze,loc)
-        if test == 1:
-            expanded += 1
-            frontier.append(location(loc.x - 1, loc.y, temp))
-        elif test == 2:
-            break
-        test = right(maze, loc)
-        if test == 1:
-            expanded += 1
-            frontier.append (location(loc.x + 1, loc.y, temp))
-        elif test == 2:
-            break
+        expanded += len(pm)
+        frontier = frontier + pm
         if not maze[loc.x][loc.y] == 'P':
             maze[loc.x][loc.y] = 'X'
 
@@ -97,7 +119,6 @@ def DFS(maze, frontier):
         loc = loc.previous
     output()
     solution.write('\n' + str(expanded))
-
 DFS(maze, frontier)
 
 
