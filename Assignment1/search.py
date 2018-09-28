@@ -1,27 +1,30 @@
-file = open('open maze.txt', 'r')
+file = open('large maze.txt', 'r')
 solution = open('solution.txt', 'w')
 
 maze = []
 
 class location():
-
+#class containing points, x coordinate, y coordinate, and point connecting to it
     def __init__(self, x, y, previous):
         self.previous = previous
         self.x = x
         self.y = y
 
+#reading in file to 2D array
 for line in file:
     row = []
     for symbol in line:
         row += symbol
         if (symbol == 'P'):
+            #starting location
             frontier = [location(len(maze),len(row) - 1, None)]
     maze.append(row)
 
 
-
+#return whether it can move in direction
 def down(maze, loc):
     if maze[loc.x][loc.y + 1] == ' ':
+        maze[loc.x][loc.y + 1] = 'X' #we have been to this point
         return 1
     elif maze[loc.x][loc.y + 1] == '*':
         return 2
@@ -30,6 +33,7 @@ def down(maze, loc):
 
 def up(maze, loc):
     if maze[loc.x][loc.y - 1] == ' ':
+        maze[loc.x][loc.y - 1] = 'X'
         return 1
     elif maze[loc.x][loc.y - 1] == '*':
         return 2
@@ -38,6 +42,7 @@ def up(maze, loc):
 
 def left(maze, loc):
     if maze[loc.x - 1][loc.y] == ' ':
+        maze[loc.x - 1][loc.y] = 'X'
         return 1
     elif maze[loc.x - 1][loc.y] == '*':
         return 2
@@ -46,12 +51,14 @@ def left(maze, loc):
 
 def right(maze, loc):
     if maze[loc.x + 1][loc.y] == ' ':
+        maze[loc.x + 1][loc.y] = 'X'
         return 1
     elif maze[loc.x + 1][loc.y] == '*':
         return 2
     else:
         return 0
 def possibleMoves(maze, temp):
+    #adds all possible moves to the frontier
     frontier = []
     loc = location(temp.x, temp.y, temp.previous)
     test = down(maze, loc)
@@ -74,25 +81,27 @@ def possibleMoves(maze, temp):
         frontier.append (location(loc.x + 1, loc.y, temp))
     elif test == 2:
         return 1
-    if not maze[loc.x][loc.y] == 'P':
-        maze[loc.x][loc.y] = 'X'
+
     return frontier
 def output():
+    #write maze to file
     for row in maze:
         for i in row:
             if (i == 'X'):
                 solution.write(' ')
             else:
                 solution.write (i)
+
 def DFS(maze, frontier):
+    #depth first
     expanded = 0
     while len(frontier) > 0:
-        loc = frontier.pop()
-        pm = possibleMoves(maze,loc)
+        loc = frontier.pop() #pop from top of stack
+        pm = possibleMoves(maze,loc) #return local frontier for current node
         if pm == 1:
             break
-        expanded += len(pm)
-        frontier = frontier + pm
+        expanded += len(pm) #add possible moves to total expanded nodes
+        frontier = frontier + pm #add possible moves to top of frontier stack
 
 
     while not loc.previous == None:
@@ -105,14 +114,12 @@ def BFS(maze, frontier):
     expanded = 0;
 
     while len(frontier) > 0:
-        loc = frontier.pop(0)
+        loc = frontier.pop(0) #take from front of queue
         pm = possibleMoves(maze,loc)
         if pm == 1:
             break
         expanded += len(pm)
         frontier = frontier + pm
-        if not maze[loc.x][loc.y] == 'P':
-            maze[loc.x][loc.y] = 'X'
 
     while not loc.previous == None:
         maze[loc.x][loc.y] = '.'
