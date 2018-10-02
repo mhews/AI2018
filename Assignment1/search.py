@@ -1,7 +1,11 @@
-file = open('large maze.txt', 'r')
+
+
+file = open('medium maze.txt', 'r')
 solution = open('solution.txt', 'w')
 
 maze = []
+goal = None
+
 
 class location():
 #class containing points, x coordinate, y coordinate, and point connecting to it
@@ -18,6 +22,9 @@ for line in file:
         if (symbol == 'P'):
             #starting location
             frontier = [location(len(maze),len(row) - 1, None)]
+        if (symbol == '*'):
+            #goal
+            goal = location(len(maze), len(row) - 1, None)
     maze.append(row)
 
 
@@ -57,6 +64,7 @@ def right(maze, loc):
         return 2
     else:
         return 0
+    
 def possibleMoves(maze, temp):
     #adds all possible moves to the frontier
     frontier = []
@@ -81,8 +89,9 @@ def possibleMoves(maze, temp):
         frontier.append (location(loc.x + 1, loc.y, temp))
     elif test == 2:
         return 1
-
     return frontier
+
+
 def output():
     #write maze to file
     for row in maze:
@@ -126,7 +135,43 @@ def BFS(maze, frontier):
         loc = loc.previous
     output()
     solution.write('\n' + str(expanded))
-DFS(maze, frontier)
+    
+def distance(loc):
+    # No need take sqrt. gives the same relative info.
+    distance_toGoal = (loc.x - goal.x)**2 + (loc.y - goal.y)**2
+    return distance_toGoal
+    
+def GREEDY(maze, frontier):
+    # if possibleMoves() returns 1, that means it's a goal state.
+    #     otherwise, it will return a list of locations to check.
+    expanded = 0
+    while len(frontier) > 0:
+        # frontier.sort(key=None, reverse=False)
+        loc = frontier.pop(0)
+        pm = possibleMoves(maze, loc)
+        i_dist = None
+        next_move = None
+        next_move_dist = None
+        if pm == 1:
+            break
+        for i in pm: 
+            i_dist = distance(i)
+            if next_move_dist is None:
+                next_move_dist = i_dist
+                next_move = i
+            elif i_dist < next_move_dist:
+                next_move_dist = i_dist
+                next_move = i
+        expanded += 1
+        frontier.append(next_move)
+    while not loc.previous == None:
+        maze[loc.x][loc.y] = '.'
+        loc = loc.previous
+    output()
+    solution.write('\n' + str(expanded))
+    
+    
+GREEDY(maze, frontier)
 
 
 solution.close()
