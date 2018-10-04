@@ -1,6 +1,6 @@
 
 
-file = open('medium maze.txt', 'r')
+file = open('open maze.txt', 'r')
 solution = open('solution.txt', 'w')
 
 maze = []
@@ -145,9 +145,15 @@ def GREEDY(maze, frontier):
     # if possibleMoves() returns 1, that means it's a goal state.
     #     otherwise, it will return a list of locations to check.
     expanded = 0
+    current_dist = None
     while len(frontier) > 0:
         # frontier.sort(key=None, reverse=False)
+        noFinish = False
         loc = frontier.pop(0)
+        if loc == None:
+            noFinish = True
+            break
+        current_dist = distance(loc)
         pm = possibleMoves(maze, loc)
         i_dist = None
         next_move = None
@@ -160,13 +166,17 @@ def GREEDY(maze, frontier):
                 next_move_dist = i_dist
                 next_move = i
             elif i_dist < next_move_dist:
+                frontier.insert(0, next_move)
                 next_move_dist = i_dist
                 next_move = i
-        expanded += 1
-        frontier.append(next_move)
-    while not loc.previous == None:
-        maze[loc.x][loc.y] = '.'
-        loc = loc.previous
+            else:
+                frontier.insert(0, i)
+        if noFinish == False and next_move != None:
+            expanded += 1
+            frontier.insert(0, next_move)
+            while not loc.previous == None:
+                maze[loc.x][loc.y] = '.'
+                loc = loc.previous
     output()
     solution.write('\n' + str(expanded))
     
