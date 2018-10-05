@@ -1,5 +1,4 @@
 
-
 solution = open('solution.txt', 'w')
 
 maze = []
@@ -13,17 +12,17 @@ class location():
         self.x = x
         self.y = y
 
-#reading in file to 2D array
 choice = 0
 while not choice == '1' and not choice == '2' and not choice == '3':
     choice = input('1 - medium maze\n2 - large maze\n3 - open maze\n')
-    print (choice)
     if choice == '1':
         file = open('medium maze.txt', 'r')
     elif choice == '2':
         file = open('large maze.txt', 'r')
     elif choice == '3':
         file = open('open maze.txt', 'r')
+
+#reading in file to 2D array
 for line in file:
     row = []
     for symbol in line:
@@ -35,8 +34,6 @@ for line in file:
             #goal
             goal = location(len(maze), len(row) - 1, None)
     maze.append(row)
-
-
 
 #return whether it can move in direction
 def down(maze, loc):
@@ -149,7 +146,7 @@ def BFS(maze, frontier):
 
 def distance(loc):
     # No need take sqrt. gives the same relative info.
-    distance_toGoal = (loc.x - goal.x)**2 + (loc.y - goal.y)**2
+    distance_toGoal = abs(loc.x - goal.x) + abs(loc.y - goal.y)
     return distance_toGoal
 
 def GREEDY(maze, frontier):
