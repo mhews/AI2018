@@ -1,6 +1,5 @@
 
 
-file = open('open maze.txt', 'r')
 solution = open('solution.txt', 'w')
 
 maze = []
@@ -15,6 +14,16 @@ class location():
         self.y = y
 
 #reading in file to 2D array
+choice = 0
+while not choice == '1' and not choice == '2' and not choice == '3':
+    choice = input('1 - medium maze\n2 - large maze\n3 - open maze\n')
+    print (choice)
+    if choice == '1':
+        file = open('medium maze.txt', 'r')
+    elif choice == '2':
+        file = open('large maze.txt', 'r')
+    elif choice == '3':
+        file = open('open maze.txt', 'r')
 for line in file:
     row = []
     for symbol in line:
@@ -26,6 +35,7 @@ for line in file:
             #goal
             goal = location(len(maze), len(row) - 1, None)
     maze.append(row)
+
 
 
 #return whether it can move in direction
@@ -64,7 +74,7 @@ def right(maze, loc):
         return 2
     else:
         return 0
-    
+
 def possibleMoves(maze, temp):
     #adds all possible moves to the frontier
     frontier = []
@@ -106,6 +116,7 @@ def DFS(maze, frontier):
     expanded = 0
     while len(frontier) > 0:
         loc = frontier.pop() #pop from top of stack
+        expanded += 1
         pm = possibleMoves(maze,loc) #return local frontier for current node
         if pm == 1:
             break
@@ -124,10 +135,10 @@ def BFS(maze, frontier):
 
     while len(frontier) > 0:
         loc = frontier.pop(0) #take from front of queue
+        expanded += 1
         pm = possibleMoves(maze,loc)
         if pm == 1:
             break
-        expanded += len(pm)
         frontier = frontier + pm
 
     while not loc.previous == None:
@@ -135,12 +146,12 @@ def BFS(maze, frontier):
         loc = loc.previous
     output()
     solution.write('\n' + str(expanded))
-    
+
 def distance(loc):
     # No need take sqrt. gives the same relative info.
     distance_toGoal = (loc.x - goal.x)**2 + (loc.y - goal.y)**2
     return distance_toGoal
-    
+
 def GREEDY(maze, frontier):
     # if possibleMoves() returns 1, that means it's a goal state.
     #     otherwise, it will return a list of locations to check.
@@ -160,7 +171,7 @@ def GREEDY(maze, frontier):
         next_move_dist = None
         if pm == 1:
             break
-        for i in pm: 
+        for i in pm:
             i_dist = distance(i)
             if next_move_dist is None:
                 next_move_dist = i_dist
@@ -174,14 +185,21 @@ def GREEDY(maze, frontier):
         if noFinish == False and next_move != None:
             expanded += 1
             frontier.insert(0, next_move)
-            while not loc.previous == None:
-                maze[loc.x][loc.y] = '.'
-                loc = loc.previous
+    while not loc.previous == None:
+        maze[loc.x][loc.y] = '.'
+        loc = loc.previous
     output()
     solution.write('\n' + str(expanded))
-    
-    
-GREEDY(maze, frontier)
 
+
+choice = 0
+while not choice == '1' and not choice == '2' and not choice == '3':
+    choice = input('1 - Depth First\n2 - Breadth First\n3 - Greedy\n')
+    if choice == '1':
+        DFS(maze,frontier)
+    elif choice == '2':
+        BFS(maze,frontier)
+    elif choice == '3':
+        GREEDY(maze,frontier)
 
 solution.close()
