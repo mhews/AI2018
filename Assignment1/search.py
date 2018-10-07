@@ -1,4 +1,5 @@
-
+from collections import deque
+import queue
 solution = open('solution.txt', 'w')
 
 maze = []
@@ -188,9 +189,64 @@ def GREEDY(maze, frontier):
     output()
     solution.write('\n' + str(expanded))
 
+def aStarSearch(problem, frontier):
+    start = frontier.pop(0)
+    expanded = 0
+    cameFrom = {}
+    openSet = set([start])
+    closedSet = set()
+    gScore = {}
+    fScore = {}
+    gScore[start] = 0
+    fScore[start] = gScore[start] + distance(start)
+    while len(openSet) != 0:
+        current = getLowest(openSet, fScore)
+        pm = possibleMoves(problem, current)
+        if pm == 1:
+            p = reconstructPath(cameFrom, goal)
+            break
+        openSet.remove(current)
+        closedSet.add(current)
+        for neighbor in pm:
+            tentative_gScore =  gScore[current] + distance(neighbor)
+            if neighbor in closedSet and tentative_gScore >= gScore[neighbor]:
+                continue
+            if neighbor not in closedSet or tentative_gScore < gScore[neighbor]:
+                cameFrom[neighbor] = current
+                maze[current.x][current.y] = '.'
+                gScore[neighbor] = tentative_gScore
+                fScore[neighbor] = gScore[neighbor] + distance(neighbor)
+                if neighbor not in openSet:
+                    openSet.add(neighbor)
+                    expanded += 1
+    output()
+    solution.write('\n' + str(expanded))
+
+
+
+def getLowest(openSet,fScore):
+    lowest = float("inf")
+    lowestNode = None
+    for node in openSet:
+        if fScore[node] < lowest:
+            lowest = fScore[node]
+            lowestNode = node
+    return lowestNode
+
+def reconstructPath(cameFrom,goal):
+    path = deque()
+    node = goal
+    path.appendleft(node)
+    while node in cameFrom:
+        node = cameFrom[node]
+        path.appendleft(node)
+        maze[node.x][node.y] = '.'
+    return path
+
+
 
 choice = 0
-while not choice == '1' and not choice == '2' and not choice == '3':
+while not choice == '1' and not choice == '2' and not choice == '3' and not choice =='4':
     choice = input('1 - Depth First\n2 - Breadth First\n3 - Greedy\n')
     if choice == '1':
         DFS(maze,frontier)
@@ -198,5 +254,8 @@ while not choice == '1' and not choice == '2' and not choice == '3':
         BFS(maze,frontier)
     elif choice == '3':
         GREEDY(maze,frontier)
+    elif choice == '4':
+        aStarSearch(maze, frontier)
 
 solution.close()
+
