@@ -115,8 +115,30 @@ class DumbSolver:
                 if self.board.arr[i][j].iData == val:
                     return i, j
 
-    def place_path(self, path):
+    def place_path(self, path, color):
         print("path %r" % path)
+        for element in path:
+            if self.board.arr[element[0]][element[1]].nColor == None:
+                self.board.arr[element[0]][element[1]].nColor = color
+            elif self.board.arr[element[0]][element[1]].nColor == color:
+                continue
+            else:
+                print("Error placing path.")
+                print("color = %s" % color)
+                print("element = %r" % element)
+                print("nColor = %s" % self.board.arr[element[0]][element[1]].nColor)
+                self.printArr()
+                print("1099901")
+                sys.exit(1)  # TODO: After debug, swap this out with return False
+        self.printArr()
+        return True
+
+
+    def backPropagate(self):
+
+
+
+    # -------------- END backPropogate() ------------------ #
 
     def solveit(self):
         if DUMB:
@@ -131,7 +153,14 @@ class DumbSolver:
                     print("1100001")
                     sys.exit(1)
                 iPath = dfs.dfs_search(i, j)
-                self.place_path(iPath)
+                iPath.append((i, j))
+                if not self.place_path(iPath, element):
+                    iterations = 0
+                    while not self.backPropagate(element):
+                        iterations += 1
+                        if iterations%100 = 0:
+                            print("Iterations: %d" % iterations)
+
         if SMART:
             pass
 
@@ -156,8 +185,8 @@ class Board:
     def printArr(self):
         for row in self.arr:
             for element in row:
-                if element.iData != None:
-                    print(element.iData, end=" ")
+                if element.iData != None or element.nColor != None:
+                    print(element.nColor, end=" ")
                 elif (element.iData == None or element.iData == BLANK):
                     print(BLANK, end=" ")
             print(end="\n")
@@ -193,10 +222,7 @@ class Node:
 #end class Node
 
     def mark_node(self, mark):
-        if self.iData == mark:
-            return True
-        elif mark not in self.nMarked and \
-            (self.iData == None or self.iData == BLANK) and self.nColor == None:
+        if mark not in self.nMarked and (self.nColor == None or self.nColor == mark):
             self.nMarked.append(mark)
             return True
 
@@ -317,43 +343,27 @@ class DFS:
         lPath = self.dfs_helper(i, j)
         lPath.append((iItr, jItr))
         return lPath
-    ''' while lNext_Position:
-            # Put the rest on the stack.
-            self.gStack[self.gStack_order.index(self.iGraph[iItr][jItr].iData)] \
-                                                    .append(lNext_Position.pop(0)) 
-            '''
-
-    ''' if (self.iGraph[iItr][jItr].iData == self.target):
-            return lMoveSequence.append((iItr, jItr))
-        else:
-            # Make move to move
-            #i, j = self.make_move(lMoveSequence)
-            # Fucking recursion
-            if not self.dfs_search(self, i, j):
-                if self.gStack <= 1:
-                    print("Could not find the end node.")
-                    print("1400001")
-                    sys.exit(1)'''
 
 
     # --------------------- END dfs_search() ----------------------- #
 
     def check_directions(self, i, j):
         lDirections = []
-        if (i < len(self.iGraph) - 1) and (self.iGraph[i + 1][j].iData == BLANK \
-                            or self.iGraph[i + 1][j].iData == None or self \
-                            .iGraph[i + 1][j].iData == self.target):
+        if (i < len(self.iGraph) - 1) and (self.iGraph[i + 1][j].iData == None \
+                            or self.iGraph[i + 1][j].iData == self.target) and \
+                            self.target not in self.iGraph[i + 1][j].nMarked:
             lDirections.append((i + 1, j))
-        if i > 1 and (self.iGraph[i - 1][j].iData == BLANK or self \
-                                    .iGraph[i - 1][j].iData == None or self \
-                                    .iGraph[i - 1][j].iData == self.target):
+        if i > 1 and (self.iGraph[i - 1][j].iData == None or self.iGraph[i - 1][j] \
+                                        .iData == self.target) and self.target \
+                                        not in self.iGraph[i - 1][j].nMarked:
             lDirections.append((i - 1, j))
-        if (j < len(self.iGraph[0]) - 1) and (self.iGraph[i][j + 1] \
-                        .iData == BLANK or self.iGraph[i][j + 1].iData == None \
-                                or self.iGraph[i][j + 1].iData == self.target):
+        if (j < len(self.iGraph[0]) - 1) and (self.iGraph[i][j + 1].iData == None \
+                            or self.iGraph[i][j + 1].iData == self.target) \
+                            and self.target not in self.iGraph[i][j + 1].nMarked:
             lDirections.append((i, j + 1))
-        if j > 0 and (self.iGraph[i][j - 1].iData == BLANK or self.iGraph[i][j - 1] \
-                    .iData == None or self.iGraph[i][j - 1].iData == self.target):
+        if j > 0 and (self.iGraph[i][j - 1].iData == None or self.iGraph[i][j - 1] \
+                                        .iData == self.target) and self.target \
+                                        not in self.iGraph[i][j - 1].nMarked:
             lDirections.append((i, j - 1))
 
         return lDirections
@@ -387,7 +397,6 @@ class DFS:
         sys.exit(1)
 
 #end class DFS
-
 
 
 def main():
