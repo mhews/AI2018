@@ -3,12 +3,14 @@ from pprint import pprint
 import time
 import sys
 import random
+import math
 
 # Constants
 MAZE = "../5x5maze.txt"
 BLANK = "_"
 DUMB = True
 SMART = False
+TERM = '$'
 
 # Public Functions
 def zeroArr(arr):
@@ -33,9 +35,7 @@ class DumbSolver:
         self.sNodes = []
         self.board = Board()
 
-
         # --------------  END __init__()   --------------------------- #
-
 
 
     def find_path_heads(self):
@@ -116,7 +116,8 @@ class DumbSolver:
                     return i, j
 
     def place_path(self, path, color):
-        print("path %r" % path)
+        if not path:
+            return False
         for element in path:
             if self.board.arr[element[0]][element[1]].nColor == None:
                 self.board.arr[element[0]][element[1]].nColor = color
@@ -124,18 +125,58 @@ class DumbSolver:
                 continue
             else:
                 print("Error placing path.")
-                print("color = %s" % color)
-                print("element = %r" % element)
-                print("nColor = %s" % self.board.arr[element[0]][element[1]].nColor)
+                print("color = %r" % color)
+                print("nColor = %r" % self.board.arr[element[0]][element[1]].nColor)
                 self.printArr()
-                print("1099901")
-                sys.exit(1)  # TODO: After debug, swap this out with return False
+                return False
         self.printArr()
         return True
 
+    def remove_symbol(self, symbol):
+        # Remove this symbol from the graph
+        for row in self.board.arr:
+            for element in row:
+                if element.nColor == symbol and element.iData != element.nColor:
+                    element.nColor = None
+                if symbol in element.nMarked:
+                    element.nMarked.remove(symbol)
 
-    def backPropagate(self):
+    def elementRewind(self, element, symbol, path):
+        # Rewind the path with the symbol to the state where the element was a choice
+        if not path:
+            # This means we're dealing with a finished path. Look for end element.
+            for u in range(len(self.board.arr)):
+                for v in range(len(self.board.arr[0])):
+                    if self.board.arr[u][v].iData == symbol and self.board.arr[u][v].iData == self.board.arr[u][v].nColor and symbol not in self.board.arr[u][v].nMarked:
+                        # found the tail remove the color but, leave it marked until
+                        #    we pop all off this local stack. Then clear. Don't touch the 
+                        #    end node.
+                        # Look up, down, left, right until we've found the same marked symbol.
+                        # Then ask yourself, is the element touching me?
+                        print("\n")
 
+    def backPropagate(self, symbol, path):
+        # Record state
+        lStack_idx = self.constraints.index(symbol)
+
+        while True:
+            if self.sNodes[lStack_idx][(len(self.sNodes[lStack_idx]) - 1)] != TERM:
+                element_rwnd = self.sNodes[lStack_idx].pop(len(self.sNodes[lStack_idx]) - 1)
+                self.elementRewind(element_rwnd, self.constraints[lStack_idx], path)
+            else:
+                # get rid this symbol
+                self.remove_symbol(self.constraints[lStack_idx])
+                lStack_idx -= 1
+            print("\n")
+        # Pop stack lifo. For all (x, y) remove path nodes | (x, y) is in moves.
+        # continue until symbol stack is empty.
+
+
+        # Remove traces of symbol before continuing with symbol-1 in global stack.
+
+        # continue until stack is empty: Error || symbol path has been completed.
+
+        # make sure stack is complete through symbol when returning control.
 
 
     # -------------- END backPropogate() ------------------ #
@@ -153,12 +194,13 @@ class DumbSolver:
                     print("1100001")
                     sys.exit(1)
                 iPath = dfs.dfs_search(i, j)
-                iPath.append((i, j))
+                if len(iPath) > 0:
+                    iPath.append((i, j))
                 if not self.place_path(iPath, element):
                     iterations = 0
-                    while not self.backPropagate(element):
+                    while not self.backPropagate(element, iPath):
                         iterations += 1
-                        if iterations%100 = 0:
+                        if iterations % 100 == 0:
                             print("Iterations: %d" % iterations)
 
         if SMART:
@@ -190,6 +232,7 @@ class Board:
                 elif (element.iData == None or element.iData == BLANK):
                     print(BLANK, end=" ")
             print(end="\n")
+        print("\n")
 
 
 # END class Board
@@ -228,11 +271,7 @@ class Node:
 
         else:
             return False
-    ''' if self.iData != None and not self.nColor:
-            return False
-        else:
-            self.nColor = mark
-            return True  '''
+
 
     def pop_color(self, color):
         if self.nColor == color:
@@ -272,24 +311,27 @@ class DFS:
         # check if any fo the next moves is a target. If so, pick it. If not,
         # pick something else and return it. Return the next move in idx 0. The rest
         # to be pushed onto stack in the trailing positions.
+        path = []
         lNext_Position = self.check_directions(iItr, jItr)
-        while len(lNext_Position) > 0:
-            if len(lNext_Position) == 1:
-                i = lNext_Position[0][0]
-                j = lNext_Position[0][1]
-                lNext_Position = []
-            else:
-                # Push the end to the stack
-                tempPos = lNext_Position.pop(len(lNext_Position) - 1)
-                tempIndex = self.gStack_order.index(self.target)
-                self.gStack[tempIndex].append(tempPos)
-        
-        if not self.iGraph[iItr][jItr].mark_node(self.iGraph[iItr][jItr].iData):
-            print("Could not mark the node.")
-            print("1300001")
-            sys.exit(1)
+        if len(lNext_Position) > 0:
+            while len(lNext_Position) > 0:
+                if len(lNext_Position) == 1:
+                    i = lNext_Position[0][0]
+                    j = lNext_Position[0][1]
+                    lNext_Position = []
+                else:
+                    # Push the end to the stack
+                    tempPos = lNext_Position.pop(len(lNext_Position) - 1)
+                    tempIndex = self.gStack_order.index(self.target)
+                    self.gStack[tempIndex].append(tempPos)
+            
+            if not self.iGraph[iItr][jItr].mark_node(self.iGraph[iItr][jItr].iData):
+                print("Could not mark the node.")
+                print("1300001")
+                sys.exit(1)
 
-        path = self.dfs_helper(i, j)
+            path = self.dfs_helper(i, j)
+            return path
         return path
 
 
@@ -313,15 +355,6 @@ class DFS:
         if not flag:
             lNext_Position = self.cleanPosition(lNext_Position)
 
-
-
-            # Pick one of them and put the others on the stack
-            #rd = random.randint(0, len(lDirections) - 1)
-            #if len(lNext_Position) > 0:
-                #lMoveSequence = lNext_Position.pop(random.randint(0, len(lNext_Position) - 1))
-
-        
-
             while len(lNext_Position) > 0:
                 if len(lNext_Position) == 1:
                     i = lNext_Position[0][0]
@@ -333,10 +366,10 @@ class DFS:
                     tempIndex = self.gStack_order.index(self.target)
                     self.gStack[tempIndex].append(tempPos)
 
-            if not self.iGraph[iItr][jItr].mark_node(self.target):
-                print("Could not mark the node.")
-                print("1355501")
-                sys.exit(1)
+        if not self.iGraph[iItr][jItr].mark_node(self.target):
+            print("Could not mark the node.")
+            print("1355501")
+            sys.exit(1)
 
             #print("Stop")
 
@@ -351,19 +384,23 @@ class DFS:
         lDirections = []
         if (i < len(self.iGraph) - 1) and (self.iGraph[i + 1][j].iData == None \
                             or self.iGraph[i + 1][j].iData == self.target) and \
-                            self.target not in self.iGraph[i + 1][j].nMarked:
+                            self.target not in self.iGraph[i + 1][j].nMarked and \
+                            (self.iGraph[i + 1][j].nColor == None or self.iGraph[i + 1][j].nColor == self.target):
             lDirections.append((i + 1, j))
         if i > 1 and (self.iGraph[i - 1][j].iData == None or self.iGraph[i - 1][j] \
                                         .iData == self.target) and self.target \
-                                        not in self.iGraph[i - 1][j].nMarked:
+                                        not in self.iGraph[i - 1][j].nMarked and \
+                                        (self.iGraph[i - 1][j].nColor == None or self.iGraph[i - 1][j].nColor == self.target):
             lDirections.append((i - 1, j))
         if (j < len(self.iGraph[0]) - 1) and (self.iGraph[i][j + 1].iData == None \
                             or self.iGraph[i][j + 1].iData == self.target) \
-                            and self.target not in self.iGraph[i][j + 1].nMarked:
+                            and self.target not in self.iGraph[i][j + 1].nMarked and \
+                            (self.iGraph[i][j + 1].nColor == None or self.iGraph[i][j + 1].nColor == self.target):
             lDirections.append((i, j + 1))
         if j > 0 and (self.iGraph[i][j - 1].iData == None or self.iGraph[i][j - 1] \
                                         .iData == self.target) and self.target \
-                                        not in self.iGraph[i][j - 1].nMarked:
+                                        not in self.iGraph[i][j - 1].nMarked and \
+                                        (self.iGraph[i][j - 1].nColor == None or self.iGraph[i][j - 1].nColor == self.target):
             lDirections.append((i, j - 1))
 
         return lDirections
