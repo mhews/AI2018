@@ -141,36 +141,144 @@ class DumbSolver:
                 if symbol in element.nMarked:
                     element.nMarked.remove(symbol)
 
+
+    def elementRewind_h(self, element, curPos, targetSymbol):
+        # Look up, down, left, right until we've found the same marked symbol.
+        # Then ask yourself, is the element touching me?
+        # DOWN
+        u = curPos[0]
+        v = curPos[1]
+        lUP = False
+        lDOWN = False
+        lLEFT = False
+        lRIGHT = False
+        returnIt = False
+        # Look up, down, left, right for element and if it's adjacent continue
+        #    taking element as the next move.
+        # check if any of these directions are going to be out of bounds
+        # We're in the center of the board. Go forth and conquer
+        #if self.board.arr[curPos[0]][curPos[1]].nColor == targetSymbol:
+            #self.board.arr[curPos[0]][curPos[1]].nColor = None
+            #self.board.arr[curPos[0]][curPos[1]].nMarked.remove(targetSymbol)
+
+        if u < len(self.board.arr) - 1:
+            lDOWN = True
+        if u > 0:
+            lUP = True
+        if v > 0:
+            lLEFT = True
+        if v < len(self.board.arr[0]) - 1:
+            lRIGHT = True
+
+        if self.board.arr[curPos[0]][curPos[1]].mChoice:
+            if lDOWN:
+                #Down
+                if u + 1 == element[0]:
+                    returnIt = True
+            if lUP:
+                # UP
+                if u - 1 == element[0]:
+                    returnIt = True
+            if lRIGHT:
+                # Right
+                if v + 1 == element[1]:
+                    returnIt = True
+            if lLEFT:
+                # Left
+                if v - 1 == element[1]:
+                    returnIt = True
+
+        if returnIt:
+            # We've found the adjacent node, continue from here
+            return curPos
+            
+        if lDOWN:
+            # Down
+            if self.board.arr[u + 1][v].nColor == targetSymbol \
+                                            and targetSymbol in self.board.arr[u + 1][v].nMarked:
+                # This is then next position to move to.
+                    self.board.arr[curPos[0]][curPos[1]].nColor = None
+                    self.board.arr[curPos[0]][curPos[1]].nMarked.remove(targetSymbol)
+                    return self.elementRewind_h(element, (u + 1, v), targetSymbol)
+        if lUP:
+            # UP
+            if self.board.arr[u - 1][v].nColor == targetSymbol and targetSymbol \
+                                            in self.board.arr[u - 1][v].nMarked:
+                    self.board.arr[curPos[0]][curPos[1]].nColor = None
+                    self.board.arr[curPos[0]][curPos[1]].nMarked.remove(targetSymbol)
+                    return self.elementRewind_h(element, (u - 1, v), targetSymbol)
+        if lLEFT:
+            # LEFT
+            if self.board.arr[u][v - 1].nColor == targetSymbol and targetSymbol \
+                                        in self.board.arr[u][v - 1].nMarked:
+                    self.board.arr[curPos[0]][curPos[1]].nColor = None
+                    self.board.arr[curPos[0]][curPos[1]].nMarked.remove(targetSymbol)
+                    return self.elementRewind_h(element, (u, v - 1), targetSymbol)
+        if lRIGHT:
+            # RIGHT
+            if self.board.arr[u][v + 1].nColor == targetSymbol and targetSymbol in \
+                                                    self.board.arr[u][v + 1].nMarked:
+                    self.board.arr[curPos[0]][curPos[1]].nColor = None
+                    self.board.arr[curPos[0]][curPos[1]].nMarked.remove(targetSymbol)
+                    return self.elementRewind_h(element, (u, v + 1), targetSymbol)
+
+    # --------------------- END elementRewind_h() ---------------------------- #
+
+
     def elementRewind(self, element, symbol, path):
         # Rewind the path with the symbol to the state where the element was a choice
         if not path:
             # This means we're dealing with a finished path. Look for end element.
             for u in range(len(self.board.arr)):
                 for v in range(len(self.board.arr[0])):
-                    if self.board.arr[u][v].iData == symbol and self.board.arr[u][v].iData == self.board.arr[u][v].nColor and symbol not in self.board.arr[u][v].nMarked:
-                        # found the tail remove the color but, leave it marked until
-                        #    we pop all off this local stack. Then clear. Don't touch the 
-                        #    end node.
-                        # Look up, down, left, right until we've found the same marked symbol.
-                        # Then ask yourself, is the element touching me?
-                        print("\n")
+                    if self.board.arr[u][v].iData == symbol and self.board.arr[u][v] \
+                                        .iData == self.board.arr[u][v].nColor and \
+                                        symbol not in self.board.arr[u][v].nMarked:
+                        # found the tail and we can call the recursive function passing in the
+                        #     tail of the path.
+
+                         # Down
+                        if u < len(self.board.arr) - 1 and self.board.arr[u + 1][v].nColor == symbol \
+                                                    and symbol in self.board.arr[u + 1][v].nMarked:
+                            return self.elementRewind_h(element, (u + 1, v), symbol)
+                        # UP
+                        if u > 0 and  self.board.arr[u - 1][v].nColor == symbol and symbol \
+                                                    in self.board.arr[u - 1][v].nMarked:
+                            return self.elementRewind_h(element, (u - 1, v), symbol)
+                        # LEFT
+                        if v > 0 and self.board.arr[u][v - 1].nColor == symbol and symbol \
+                                                    in self.board.arr[u][v - 1].nMarked:
+                            return self.elementRewind_h(element, (u, v - 1), symbol)
+                        # RIGHT
+                        if v < len(self.board.arr[0]) - 1 and self.board.arr[u][v + 1] \
+                                                .nColor == symbol and symbol in self.board \
+                                                                    .arr[u][v + 1].nMarked:
+                            return self.elementRewind_h(element, (u, v + 1), symbol)
+
+        else:
+            pass
+
 
     def backPropagate(self, symbol, path):
         # Record state
+
         lStack_idx = self.constraints.index(symbol)
 
         while True:
+            self.printArr()
             if self.sNodes[lStack_idx][(len(self.sNodes[lStack_idx]) - 1)] != TERM:
                 element_rwnd = self.sNodes[lStack_idx].pop(len(self.sNodes[lStack_idx]) - 1)
-                self.elementRewind(element_rwnd, self.constraints[lStack_idx], path)
+                continueNode = self.elementRewind(element_rwnd, self.constraints[lStack_idx], path)
+                break
             else:
                 # get rid this symbol
                 self.remove_symbol(self.constraints[lStack_idx])
                 lStack_idx -= 1
-            print("\n")
+                symbol = self.constraints[lStack_idx]
+            self.printArr()
         # Pop stack lifo. For all (x, y) remove path nodes | (x, y) is in moves.
         # continue until symbol stack is empty.
-
+        return continueNode
 
         # Remove traces of symbol before continuing with symbol-1 in global stack.
 
@@ -197,11 +305,8 @@ class DumbSolver:
                 if len(iPath) > 0:
                     iPath.append((i, j))
                 if not self.place_path(iPath, element):
-                    iterations = 0
-                    while not self.backPropagate(element, iPath):
-                        iterations += 1
-                        if iterations % 100 == 0:
-                            print("Iterations: %d" % iterations)
+                    cNode = self.backPropagate(element, iPath)
+                    print("\n")
 
         if SMART:
             pass
@@ -257,8 +362,8 @@ class Node:
         self.restrictions = None
         # list of possible values for a variable.
         self.pValues = []
-        # Has the node been previously accessed?
-        self.pAccessed = False
+        # Did I make a choice and put one on the stack?
+        self.mChoice = False
         # A list of visits
         self.nMarked = []
 
@@ -324,6 +429,7 @@ class DFS:
                     tempPos = lNext_Position.pop(len(lNext_Position) - 1)
                     tempIndex = self.gStack_order.index(self.target)
                     self.gStack[tempIndex].append(tempPos)
+                    self.iGraph[iItr][jItr].mChoice = True
             
             if not self.iGraph[iItr][jItr].mark_node(self.iGraph[iItr][jItr].iData):
                 print("Could not mark the node.")
@@ -365,6 +471,7 @@ class DFS:
                     tempPos = lNext_Position.pop(len(lNext_Position) - 1)
                     tempIndex = self.gStack_order.index(self.target)
                     self.gStack[tempIndex].append(tempPos)
+                    self.iGraph[iItr][jItr].mChoice = True
 
         if not self.iGraph[iItr][jItr].mark_node(self.target):
             print("Could not mark the node.")
