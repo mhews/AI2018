@@ -103,6 +103,7 @@ def Test(solu, ep1, ep2, color):
         for ch in check:
             solu[ch[0]][ch[1]] = '#'
     return False
+    
 def output(sol):
     for line in sol:
         for i in line:
@@ -112,7 +113,7 @@ def output(sol):
     printer.write(str(end - start))
     printer.close()
 
-def complete(sol):
+def complete(sol): #all spaces are filled
     for line in sol:
         for i in line:
             if i == '_':
