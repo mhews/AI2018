@@ -306,6 +306,7 @@ class DumbSolver:
                     iPath.append((i, j))
                 if not self.place_path(iPath, element):
                     cNode = self.backPropagate(element, iPath)
+                    self.printArr()
                     print("\n")
 
         if SMART:
@@ -338,7 +339,6 @@ class Board:
                     print(BLANK, end=" ")
             print(end="\n")
         print("\n")
-
 
 # END class Board
 
