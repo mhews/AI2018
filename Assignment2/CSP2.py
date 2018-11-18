@@ -18,7 +18,8 @@ class Branch:
         this.state = state
         this.endpoints = endpoints
         this.decisions = decisions
-maze = open('10x10maze.txt', 'r')
+
+maze = open(sys.argv[1], 'r')
 printer = open('solution.txt','w')
 solution = []
 endpoint = []
@@ -32,7 +33,7 @@ for line in maze:
     if len(row) > 0:
         solution.append(row)
 solution = np.array(solution)
-solution.resize([10,10])
+solution.resize([len(solution),len(solution)])
 
 def choices(x, y, color, sol):
     #find all possible moves or return 0 if adjacent to end
@@ -76,6 +77,7 @@ def choices(x, y, color, sol):
     return localDomain
 
 def Test(solu, ep1, ep2, color):
+    #greedy search to make sure there is a path between endpoints
     frontier = [ep1]
     solu[ep1[0]][ep1[1]] = '#'
     while len(frontier) > 0:
@@ -103,7 +105,7 @@ def Test(solu, ep1, ep2, color):
         for ch in check:
             solu[ch[0]][ch[1]] = '#'
     return False
-    
+
 def output(sol):
     for line in sol:
         for i in line:
@@ -140,7 +142,7 @@ def solve (sol, endpoint):
         endpoint.remove(r)
     endpoint.sort(key=lambda x: len(x.choice), reverse=False) #sort endpoints by number of options
     index = 0
-    for state in endpoint[0].choice:
+    for state in endpoint[0].choice: #branch using most constrained endpoint
         tempep = copy.deepcopy(endpoint)
 
         tempsol = copy.deepcopy(sol)
@@ -156,6 +158,7 @@ def solve (sol, endpoint):
 
                     endpoint2 = x
             if endpoint2 != 0:
+                #check all endpoints can reach their destination after branch
                 if not Test(copy.deepcopy(tempsol), (tempep[i].x, tempep[i].y), endpoint2, endpoint2.color):
                     valid = False
                     break
