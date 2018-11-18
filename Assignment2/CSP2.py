@@ -13,12 +13,6 @@ class Node:
     def addchoices(this, choices):
         this.choice = choices
 
-class Branch:
-    def __init__(this, state, endpoints, decisions):
-        this.state = state
-        this.endpoints = endpoints
-        this.decisions = decisions
-
 maze = open(sys.argv[1], 'r')
 printer = open('solution.txt','w')
 solution = []
@@ -34,6 +28,7 @@ for line in maze:
         solution.append(row)
 solution = np.array(solution)
 solution.resize([len(solution),len(solution)])
+totalStates = 0
 
 def choices(x, y, color, sol):
     #find all possible moves or return 0 if adjacent to end
@@ -113,6 +108,8 @@ def output(sol):
         printer.write('\n')
     end = time.time()
     printer.write(str(end - start))
+    printer.write('\n')
+    printer.write(str(totalStates))
     printer.close()
 
 def complete(sol): #all spaces are filled
@@ -124,6 +121,8 @@ def complete(sol): #all spaces are filled
 
 def solve (sol, endpoint):
     removes = []
+    global totalStates
+    totalStates += 1
     for ep in endpoint:#find list of possible moves for each endpoint
         check = (choices (ep.x, ep.y, ep.color, sol))
         if check == 0:#remove endpoint if it connects to compliment endpoint
@@ -138,24 +137,25 @@ def solve (sol, endpoint):
                 sys.exit(0)
             else:
                 return 0
+
     for r in removes:
         endpoint.remove(r)
     endpoint.sort(key=lambda x: len(x.choice), reverse=False) #sort endpoints by number of options
     index = 0
+
     for state in endpoint[0].choice: #branch using most constrained endpoint
         tempep = copy.deepcopy(endpoint)
-
         tempsol = copy.deepcopy(sol)
         tempsol[state[0]][state[1]] = endpoint[0].color #edit game
         tempsol[endpoint[0].x][endpoint[0].y] = endpoint[0].color.lower()
         del tempep[0] #move endpoint
         tempep.insert(0, Node(endpoint[0].color, state[0], state[1]))
         valid = True
+
         for i in range(len(tempep) - 1):
             endpoint2 = 0
             for x in tempep[i + 1:]:
                 if x.color == tempep[i].color:
-
                     endpoint2 = x
             if endpoint2 != 0:
                 #check all endpoints can reach their destination after branch
